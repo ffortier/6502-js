@@ -1,3 +1,5 @@
+import { EventTarget } from 'event-target-shim';
+
 enum ProcessorStatuses {
   NEGATIVE = 0b1000_0000,
   OVERFLOW = 0b0100_0000,
@@ -8,10 +10,16 @@ enum ProcessorStatuses {
   CARRY = 0b0000_0001,
 }
 
+const inputElement = document.createElement('input');
+
+document.getElementById('app').appendChild(inputElement);
+
 enum OpCode {
   NOP = 0xea,
   LDA_IMMEDIATE = 0xa9,
   STA = 0x8d,
+  ROR = 0x6a,
+  JMP = 0x4c,
 }
 
 interface MemoryBank {
@@ -23,15 +31,29 @@ const rom = new Uint8Array(32 * 1024 * 8);
 rom.fill(OpCode.NOP);
 
 rom[0x0000] = OpCode.LDA_IMMEDIATE;
-rom[0x0001] = 0x42;
+rom[0x0001] = 0x55;
 rom[0x0002] = OpCode.STA;
 rom[0x0003] = 0x00;
 rom[0x0004] = 0x60;
+rom[0x0005] = OpCode.ROR;
+rom[0x0006] = OpCode.STA;
+rom[0x0007] = 0x00;
+rom[0x0008] = 0x60;
+rom[0x0009] = OpCode.JMP;
+rom[0x000a] = 0x00;
+rom[0x000b] = 0x80;
 
 rom[0x7ffc] = 0x00;
 rom[0x7ffd] = 0x80;
 
-const memory = [0x8000, rom as MemoryBank];
+const inputMem: MemoryBank = {};
+
+Object.defineProperty(inputMem, '0', {
+  get: () => parseInt(inputElement.value, 2),
+  set: (value) => inputElement.value = ('00000000' + value.toString(2)).substr(-8), 
+});
+
+const memory = [0x8000, rom as MemoryBank, 0x6000, inputMem];
 
 const getNumberLE = (low: number, hi: number) => (hi << 8) | low;
 
@@ -75,8 +97,27 @@ const writeByte = (address: number, value: number): void => {
 
 type Instruction = () => void;
 
-class CPU6502 {
+class Clock extends EventTarget {
   private _intervalId = 0;
+
+  constructor(
+    private time: number,
+  ) {
+    super();
+  }
+
+  start(): void {
+    this._intervalId = setInterval(() => {
+      this.dispatchEvent(new CustomEvent('tick'));
+    }, this.time);
+  }
+
+  stop(): void {
+    clearInterval(this._intervalId);
+  }
+}
+
+class CPU6502 {
   private _instructions: Instruction[] = [];
   
   private _a = 0; // 8-bit Accumulator Register
@@ -85,6 +126,10 @@ class CPU6502 {
   private _x = 0; // 8-bit index register
   private _y = 0; // 8-bit index register
   private _p = 0; // 8-bit processor register
+
+  constructor() {
+    this.reset();
+  }
 
   reset(): void {
     this._instructions.length = 0;
@@ -97,16 +142,7 @@ class CPU6502 {
     );
   }
 
-  start(): void {
-    this.reset();
-    this._intervalId = setInterval(this.loop, 500);
-  }
-
-  stop(): void {
-    clearInterval(this._intervalId);
-  }
-
-  private loop = () => {
+  loop = () => {
     (this._instructions.shift() || this.fetchInstruction)();
   }
 
@@ -116,6 +152,19 @@ class CPU6502 {
 
   private ldaImmediate = () => {
     this._a = readByte(this._pc++);
+  }
+
+  private ror = () => {
+    this._a = (this._a << 1) & 0xff;
+  }
+
+  private jmp = () => {
+    let low: number;
+
+    this._instructions.push(
+      () => low = readByte(this._pc++),
+      () => this._pc = getNumberLE(low, readByte(this._pc)),
+    );
   }
 
   private sta = () => {
@@ -141,10 +190,22 @@ class CPU6502 {
       case OpCode.STA:
         this._instructions.push(this.sta);
         break;
+      case OpCode.ROR:
+        this._instructions.push(this.ror);
+        break;
+      case OpCode.JMP:
+        this._instructions.push(this.jmp);
+        break;
     }
   }
 }
 
 const cpu = new CPU6502();
+const clock = new Clock(1);
 
-cpu.start();
+clock.addEventListener('tick', () => cpu.loop());
+
+clock.start();
+
+document.getElementById('start').addEventListener('click', () => clock.start());
+document.getElementById('stop').addEventListener('click', () => clock.stop());
