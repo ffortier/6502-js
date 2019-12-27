@@ -1,3 +1,3 @@
-# typescript-7s9ygv
+# W65C02S emulator
 
-[Edit on StackBlitz ⚡️](https://stackblitz.com/edit/typescript-7s9ygv)
+Typescript emulator of the W65C02S so that I can use it to test some assembly code.

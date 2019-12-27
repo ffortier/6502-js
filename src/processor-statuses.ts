@@ -1,0 +1,9 @@
+export enum ProcessorStatuses {
+  NEGATIVE = 0b1000_0000,
+  OVERFLOW = 0b0100_0000,
+  BRK = 0b0001_0000,
+  DECIMAL = 0b0000_1000,
+  IRQB_DISABLED = 0b0000_0100,
+  ZERO = 0b0000_0010,
+  CARRY = 0b0000_0001,
+}
