@@ -1,14 +1,14 @@
 import { MemoryBank } from "./memory-bank";
-import { OpCode } from "./opcode";
+import { OpCode } from "../opcode";
 
 export class Memory {
   private readonly _items: readonly { offset: number, memoryBank: MemoryBank }[];
 
   constructor(
     items: { offset: number, memoryBank: MemoryBank }[],
-    private _console: Pick<Console, 'log'> = console,
+    private _console: Pick<Console, 'error'> = console,
   ) {
-    this._items = items.slice().sort((item1, item2) => item1.offset - item2.offset);
+    this._items = items.slice().sort((item1, item2) => item2.offset - item1.offset);
   }
 
   readByte(address: number): number {
@@ -31,7 +31,7 @@ export class Memory {
   }
 
   private _log(rw: 'r' | 'W', address: number, value: number): void {
-    this._console.log(
+    this._console.error(
       rw,
       ('0000' + address.toString(16)).substr(-4),
       ('00' + value.toString(16)).substr(-2),
