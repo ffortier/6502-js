@@ -5,8 +5,8 @@ export class Clock extends EventEmitter {
 
   constructor(
     private time: number,
-    private _setInterval = setInterval as typeof window.setInterval,
-    private _clearInterval = clearInterval as typeof window.clearInterval,
+    private _setInterval = setInterval as (handler: () => void, time?: number) => number,
+    private _clearInterval = clearInterval as (intervalId: number | undefined) => void,
   ) {
     super();
   }
