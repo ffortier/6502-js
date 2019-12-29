@@ -1,20 +1,7 @@
-import { State } from "./state";
+import { Instruction } from "../instructions";
 import { Memory } from "../memory";
-import { Instruction, lda, sta, ror, rol } from "../instructions";
-import { OpCode } from "../opcode";
-import { jmp } from "../instructions/jmp";
-
-const fetchNextInstruction = (state: State, memory: Memory): readonly Instruction[] => {
-  switch (memory.readByte(state.programCounter++)) {
-    case OpCode.LDA.ABSOLUTE: return [lda.absolute];
-    case OpCode.LDA.IMMEDIATE: return [lda.immediate];
-    case OpCode.STA.ABSOLUTE: return [sta.absolute];
-    case OpCode.ROR.ACCUMULATOR_A: return [ror.accumulatorA];
-    case OpCode.ROL.ACCUMULATOR_A: return [rol.accumulatorA];
-    case OpCode.JMP.ABSOLUTE: return [jmp.absolute];
-    default: return [];
-  }
-};
+import { State } from "./state";
+import { fetchNextInstruction } from "./fetch-next-instruction";
 
 export class W65C02S {
   private _state = new State();

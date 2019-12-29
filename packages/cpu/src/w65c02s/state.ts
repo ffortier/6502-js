@@ -6,7 +6,7 @@ export class State {
     public aRegister: number = 0,
     public xRegister: number = 0,
     public yRegister: number = 0,
-    public stack: number = 0,
+    public stack: number = 0x1ff,
     public processorStatuses: ProcessorStatuses = 0,
   ) { }
 }

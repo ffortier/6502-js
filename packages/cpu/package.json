@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "test": "node -r ts-node/register ./node_modules/.bin/jasmine src/**/*.spec.ts",
+    "test": "node -r ts-node/register ./node_modules/.bin/jasmine src/**/*.spec.ts src/*.spec.ts",
     "test:w": "watch 'npm run --silent test'"
   },
   "devDependencies": {
