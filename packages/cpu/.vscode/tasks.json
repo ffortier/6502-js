@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "debugasm",
+      "type": "shell",
+      "command": "nc",
+      "args": [
+        "-l",
+        "9999"
+      ]
+    }
+  ]
+}

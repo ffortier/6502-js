@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "./packages/cpu"
+		},
+		{
+			"path": "./packages/assembler"
 		}
 	],
 	"settings": {
