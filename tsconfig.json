@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "strict": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "ES6",
-    "sourceMap": true
-  }
-}

@@ -12,6 +12,16 @@
   "overrides": [
     {
       "files": [
+        "programs/*.js"
+      ],
+      "env": {
+        "node": true,
+        "browser": false,
+        "es6": true
+      }
+    },
+    {
+      "files": [
         "*.ts"
       ],
       "extends": [
