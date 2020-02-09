@@ -9,3 +9,4 @@ console.time('test')
 const { bytes, sourceMap } = compiler.compile();
 console.timeEnd('test');
 console.log(bytes);
+console.log(sourceMap);

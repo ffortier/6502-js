@@ -26,6 +26,8 @@ export class Compiler {
   compile(): CompilerOutput {
     const parseOutput = this.parser.parse(this.input);
 
+    this.sourceMapGenerator.setSourceContent('hello.s', this.input);
+
     for (const expr of parseOutput) {
       this._processors[expr.type](expr as any);
     }
@@ -80,6 +82,7 @@ export class Compiler {
       this.symbols[expr.name] = this._resolveValue(expr.value, false);
     },
     operation: (expr: Operation) => {
+      const position = this.buffer.position;
       const opCodeValue = OpCode[expr.code][expr.addressingMode];
 
       this.buffer.writeByte(opCodeValue);
@@ -87,6 +90,18 @@ export class Compiler {
       if (expr.value) {
         this.buffer.writeByte(this._resolveValue(expr.value));
       }
+
+      this.sourceMapGenerator.addMapping({
+        source: 'hello.s',
+        original: {
+          line: expr.location.start.line,
+          column: expr.location.start.column,
+        },
+        generated: {
+          line: 1,
+          column: position,
+        }
+      });
     },
     label: (expr: Label) => {
       this.labels[expr.name] = this.buffer.position;
