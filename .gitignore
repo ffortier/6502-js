@@ -1,5 +1,8 @@
-node_modules
-dist
-coverage
-src/parser/*.js
-build
+/node_modules
+/dist
+/coverage
+/src/parser/*.js
+/build
+*.out
+/vasm
+*.tar.gz

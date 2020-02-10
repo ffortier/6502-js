@@ -68,7 +68,7 @@ export interface Label {
 
 export interface Declaration {
   readonly type: 'declaration';
-  readonly name: string;
+  readonly declaration: string;
   readonly value: Value;
   readonly text: string;
   readonly location: Location

@@ -1,7 +1,6 @@
 import { RawSourceMap, SourceMapGenerator } from 'source-map';
-import { Parser, DotDirective, Declaration, Operation, Label, Value, isNumericValue } from './parser';
+import { Parser, DotDirective, Declaration, Operation, Label, Value, isNumericValue, AddressingMode } from './parser';
 import { Buffer } from './buffer';
-import { OpCode } from '../cpu';
 
 export interface CompilerOutput {
   sourceMap: RawSourceMap;
@@ -9,7 +8,6 @@ export interface CompilerOutput {
 }
 
 export class Compiler {
-  private buffer = new Buffer(new ArrayBuffer(this.size));
   private sourceMapGenerator = new SourceMapGenerator();
   private origin = 0;
   private operationProcessed = false;
@@ -20,29 +18,30 @@ export class Compiler {
   constructor(
     private parser: Parser,
     private input: string,
-    private size: number,
+    private opCodes: { readonly [code: string]: { readonly [addressingMode: string]: number } },
   ) { }
 
-  compile(): CompilerOutput {
+  compile(buffer: ArrayBuffer): RawSourceMap {
     const parseOutput = this.parser.parse(this.input);
+    const managedBuffer = new Buffer(buffer);
 
     this.sourceMapGenerator.setSourceContent('hello.s', this.input);
 
     for (const expr of parseOutput) {
-      this._processors[expr.type](expr as any);
+      this._processors[expr.type](expr as any, managedBuffer);
     }
 
     Object.entries(this.labels).forEach(([name, position]) => {
       this.labelRefs[name]?.forEach(ref => {
-        this.buffer.position = ref;
-        this.buffer.writeWordLE(position);
+        managedBuffer.position = ref;
+        managedBuffer.writeWordLE(position + this.origin);
       });
     });
 
-    return { bytes: this.buffer.bytes, sourceMap: this.sourceMapGenerator.toJSON() };
+    return this.sourceMapGenerator.toJSON();
   }
 
-  private _resolveValue(value: Value, disallowLabels = false): number {
+  private _resolveValue(value: Value, position: number, disallowLabels = false): number {
     if (isNumericValue(value)) {
       return value.value;
     }
@@ -55,9 +54,9 @@ export class Compiler {
         throw new Error('label values not allowed: ' + value.text);
       }
       if (value.text in this.labelRefs) {
-        this.labelRefs[value.text].push(this.buffer.position);
+        this.labelRefs[value.text].push(position);
       } else {
-        this.labelRefs[value.text] = [this.buffer.position];
+        this.labelRefs[value.text] = [position];
       }
       return 0xFFFF;
     }
@@ -66,29 +65,47 @@ export class Compiler {
       return value.digit.charCodeAt(0);
     }
 
-    return 0;
+    const expr = value.text
+      .replace(/\b[a-zA-Z][a-zA-Z0-9_]*\b/g, symb => this.symbols[symb]?.toString() ?? symb);
+
+    return eval(expr);
   }
 
   private _processors = {
-    dotdir: (expr: DotDirective) => {
-      const value = this._resolveValue(expr.value, false);
+    dotdir: (expr: DotDirective, buffer: Buffer) => {
+      const value = this._resolveValue(expr.value, buffer.position, true);
 
       switch (expr.directive) {
-        case '.org': this.operationProcessed ? this.buffer.position = value : this.origin = value;
-        case '.word': this.buffer.writeWordLE(value);
+        case '.org':
+          this.operationProcessed ? buffer.position = value - this.origin : this.origin = value;
+          break;
+        case '.word':
+          buffer.writeWordLE(value);
+          break;
       }
     },
-    declaration: (expr: Declaration) => {
-      this.symbols[expr.name] = this._resolveValue(expr.value, false);
+    declaration: (expr: Declaration, buffer: Buffer) => {
+      this.symbols[expr.declaration] = this._resolveValue(expr.value, buffer.position, true);
     },
-    operation: (expr: Operation) => {
-      const position = this.buffer.position;
-      const opCodeValue = OpCode[expr.code][expr.addressingMode];
+    operation: (expr: Operation, buffer: Buffer) => {
+      const position = buffer.position;
+      const opCodeValue = this.opCodes[expr.code][expr.addressingMode];
 
-      this.buffer.writeByte(opCodeValue);
+      this.operationProcessed = true;
+
+      buffer.writeByte(opCodeValue);
 
       if (expr.value) {
-        this.buffer.writeByte(this._resolveValue(expr.value));
+        const value = this._resolveValue(expr.value, buffer.position);
+
+        switch (expr.addressingMode) {
+          case AddressingMode.IMMEDIATE:
+            buffer.writeByte(value);
+            break;
+          default:
+            buffer.writeWordLE(value);
+            break;
+        }
       }
 
       this.sourceMapGenerator.addMapping({
@@ -103,8 +120,8 @@ export class Compiler {
         }
       });
     },
-    label: (expr: Label) => {
-      this.labels[expr.name] = this.buffer.position;
+    label: (expr: Label, buffer: Buffer) => {
+      this.labels[expr.name] = buffer.position;
     },
   };
 }
