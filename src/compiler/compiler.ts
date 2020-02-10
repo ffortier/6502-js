@@ -16,9 +16,9 @@ export class Compiler {
   private symbols: { [name: string]: number } = {};
 
   constructor(
-    private parser: Parser,
-    private input: string,
-    private opCodes: { readonly [code: string]: { readonly [addressingMode: string]: number } },
+    private readonly parser: Parser,
+    private readonly input: string,
+    private readonly opCodes: { readonly [code: string]: { readonly [addressingMode: string]: number } },
   ) { }
 
   compile(buffer: ArrayBuffer): RawSourceMap {
@@ -38,7 +38,18 @@ export class Compiler {
       });
     });
 
+    this._reset();
+
     return this.sourceMapGenerator.toJSON();
+  }
+
+  private _reset(): void {
+    this.sourceMapGenerator = new SourceMapGenerator();
+    this.origin = 0;
+    this.operationProcessed = false;
+    this.labelRefs = {};
+    this.labels = {};
+    this.symbols = {};
   }
 
   private _resolveValue(value: Value, position: number, disallowLabels = false): number {
