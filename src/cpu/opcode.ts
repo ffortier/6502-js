@@ -1,12 +1,12 @@
-export const OpCode: { readonly [name: string]: { readonly [addressingMode: string]: number } } = {
+export const OpCode = {
   LDA: {
     absolute: 0xad,
     immediate: 0xa9,
-  },
+  } as const,
   STA: {
     absolute: 0x8d,
-  },
+  } as const,
   JMP: {
     absolute: 0x4c,
-  },
-}
+  } as const,
+} as const;
