@@ -4,11 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "pretest": "./vasm-install.sh && npm run pegjs",
-    "test": "node -r 'ts-node/register' ./node_modules/.bin/jasmine src/**/*.spec.ts",
+    "pretest": "npm run pegjs",
+    "test": "npm run test:w -- --single-run",
+    "test:w": "karma start karma.conf.js --browsers jsdom",
     "prebuild": "npm run pegjs",
     "build": "webpack",
-    "pegjs": "pegjs -o src/parser/vasm.js pegjs/vasm.pegjs"
+    "pegjs": "pegjs -o src/parser/vasm.js pegjs/vasm.pegjs",
+    "preintegration-test": "./vasm-install.sh",
+    "integration-test": "node -r 'ts-node/register' ./node_modules/.bin/jasmine src/main.spec.ts"
   },
   "repository": {
     "type": "git",
@@ -28,7 +31,12 @@
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
     "eslint": "^6.8.0",
+    "jsdom": "^16.1.0",
     "karma": "^4.4.1",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-jasmine": "^3.1.1",
+    "karma-jsdom-launcher": "^8.0.0",
+    "karma-typescript": "^4.1.1",
     "pegjs": "^0.10.0",
     "ts-node": "^8.6.2",
     "typescript": "^3.7.5",

@@ -9,4 +9,7 @@ export const OpCode = {
   JMP: {
     absolute: 0x4c,
   } as const,
+  NOP: {
+    implicit: 0xea,
+  } as const,
 } as const;
