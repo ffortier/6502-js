@@ -1,4 +1,4 @@
-import { InstructionRegistry, Addressable, MicroInstruction } from "./instruction-registry";
+import { InstructionRegistry, Addressable, MicroInstruction, AddressableMicroInstruction } from "./instruction-registry";
 import { Memory, Cpu65c02 } from "../cpu65c02";
 import { nop } from "./nop";
 import { OpCode } from "../opcode";
@@ -21,9 +21,9 @@ describe('cpu/instructions/nop', () => {
     let microInstruction: MicroInstruction;
 
     beforeEach(() => {
-      [opCode, microInstruction] = instructionRegistry.register.calls.mostRecent().args;
+      [opCode, microInstruction as any] = instructionRegistry.register.calls.mostRecent().args;
 
-      microInstruction(cpu, 0);
+      microInstruction(cpu, undefined);
     });
 
     it('should use the NOP opCode', () => {

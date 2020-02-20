@@ -12,4 +12,16 @@ export const OpCode = {
   NOP: {
     implicit: 0xea,
   } as const,
+  ROR: {
+    accumulator: 0x6a,
+  } as const,
+  ROL: {
+    accumulator: 0x2a,
+  } as const,
+  DEX: {
+    implicit: 0xc4,
+  } as const,
+  INX: {
+    implicit: 0xe8,
+  } as const,
 } as const;

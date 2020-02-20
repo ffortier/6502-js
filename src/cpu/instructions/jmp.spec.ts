@@ -23,7 +23,7 @@ describe('cpu/instructions/jmp', () => {
     let microInstruction: MicroInstruction;
 
     beforeEach(() => {
-      [opCode, microInstruction] = instructionRegistry.register.calls.mostRecent().args;
+      [opCode, microInstruction as any] = instructionRegistry.register.calls.mostRecent().args;
 
       microInstruction(cpu, address);
     });

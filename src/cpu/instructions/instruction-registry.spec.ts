@@ -8,7 +8,7 @@ describe('cpu/instructions/instruction-registry', () => {
   const pc = 0x8000;
 
   let instructionRegistry: InstructionRegistry;
-  let microInstruction: jasmine.Spy<MicroInstruction>;
+  let microInstruction: jasmine.Spy<MicroInstruction<unknown>>;
   let memory: jasmine.SpyObj<Memory>;
   let cpu: Cpu65c02;
   let callback: jasmine.Spy<() => Instruction>;
@@ -72,8 +72,8 @@ describe('cpu/instructions/instruction-registry', () => {
         instructionRegistry.toMap().get(implicit)!(cpu).forEach(callback);
       });
 
-      it('should call the micro instruction with a 0 address', () => {
-        expect(microInstruction).toHaveBeenCalledWith(cpu, 0);
+      it('should call the micro instruction with a undefined address', () => {
+        expect(microInstruction).toHaveBeenCalledWith(cpu, undefined);
       });
 
       it('should not advance the program counter', () => {
