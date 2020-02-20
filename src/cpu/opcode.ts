@@ -24,4 +24,10 @@ export const OpCode = {
   INX: {
     implicit: 0xe8,
   } as const,
+  BNE: {
+    relative: 0xd0,
+  } as const,
+  BEQ: {
+    relative: 0xf0,
+  } as const,
 } as const;

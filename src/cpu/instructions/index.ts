@@ -7,6 +7,8 @@ import { ror } from "./ror";
 import { rol } from "./rol";
 import { dex } from "./dex";
 import { inx } from "./inx";
+import { bne } from "./bne";
+import { beq } from "./beq";
 
 const instructionRegistry = new InstructionRegistry();
 
@@ -18,5 +20,7 @@ ror(instructionRegistry);
 rol(instructionRegistry);
 dex(instructionRegistry);
 inx(instructionRegistry);
+bne(instructionRegistry);
+beq(instructionRegistry);
 
 export const instructions = instructionRegistry.toMap();

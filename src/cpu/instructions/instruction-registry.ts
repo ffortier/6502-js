@@ -1,35 +1,22 @@
 import { Cpu65c02, Instruction } from "../cpu65c02";
 import { microInstructions } from "./micro-instructions";
 
-export interface AccumulatorAddressable {
-  accumulator: number;
+export type Addressable = {
+  [P in typeof addressingModes[number]]?: number;
 }
 
-export interface AbsoluteAddressable {
-  absolute: number;
-}
-
-export interface ImmediateAddressable {
-  immediate: number;
-}
-
-export interface ImplicitAddressable {
-  implicit: number;
-}
-
-export type Addressable = AccumulatorAddressable | AbsoluteAddressable | ImmediateAddressable | ImplicitAddressable;
-
-export const addressingModes = ['absolute', 'immediate', 'implicit', 'accumulator'] as const;
+export const addressingModes = ['absolute', 'immediate', 'implicit', 'accumulator', 'relative'] as const;
 
 export interface MicroInstruction<T = unknown> {
   (cpu: Cpu65c02, address: T): void;
 }
 
 export type AddressingTypes = {
-  accumulator: 'a',
-  absolute: number,
-  immediate: number,
-  implicit: undefined,
+  accumulator: 'a';
+  absolute: number;
+  immediate: number;
+  implicit: undefined;
+  relative: number;
 };
 
 export type AddressingType<T> = { [P in keyof T]: P extends keyof AddressingTypes ? AddressingTypes[P] : never }[keyof T];
@@ -42,7 +29,7 @@ export class InstructionRegistry {
   register<T extends Addressable>(opCode: T, microInstruction: AddressableMicroInstruction<T>): void {
     addressingModes
       .filter(addressingMode => addressingMode in opCode)
-      .forEach(addressingMode => this.processors[addressingMode]((opCode as any)[addressingMode], microInstruction as any))
+      .forEach(addressingMode => this.processors[addressingMode](opCode[addressingMode]!, microInstruction as any))
   }
 
   toMap(): ReadonlyMap<number, Instruction> {
@@ -76,6 +63,16 @@ export class InstructionRegistry {
       this.instructions.set(opCode, cpu => microInstructions(
         () => microInstruction(cpu, undefined),
       ));
+    },
+    relative: (opCode: number, microInstruction: MicroInstruction<number>) => {
+      this.instructions.set(opCode, cpu => {
+        let relative: number;
+
+        return microInstructions(
+          () => relative = cpu.memory.readByte(cpu.pc++),
+          () => microInstruction(cpu, cpu.pc + relative),
+        );
+      })
     },
   }
 }
